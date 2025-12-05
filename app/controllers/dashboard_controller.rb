@@ -1,5 +1,6 @@
 class DashboardController < ActionController::Base
   include SwitchLocale
+  include AccountBrandingContext
 
   GLOBAL_CONFIG_KEYS = %w[
     LOGO
@@ -44,7 +45,18 @@ class DashboardController < ActionController::Base
   end
 
   def set_global_config
-    @global_config = GlobalConfig.get(*GLOBAL_CONFIG_KEYS).merge(app_config)
+    base_config = GlobalConfig.get(*GLOBAL_CONFIG_KEYS).merge(app_config)
+    account = branding_account_for_request
+
+    if account
+      branding = BrandingConfig.new(
+        account: account,
+        global_config: base_config.slice(*BrandingConfig::GLOBAL_KEYS)
+      ).to_global_config_hash
+      @global_config = base_config.merge(branding)
+    else
+      @global_config = base_config
+    end
   end
 
   def set_dashboard_scripts
@@ -56,8 +68,9 @@ class DashboardController < ActionController::Base
   end
 
   def render_hc_if_custom_domain
-    domain = request.host
-    return if domain == URI.parse(ENV.fetch('FRONTEND_URL', '')).host
+    domain = HostNormalizer.normalize(request.host)
+    frontend_host = URI.parse(ENV.fetch('FRONTEND_URL', '')).host&.downcase
+    return if domain.blank? || domain == frontend_host
 
     @portal = Portal.find_by(custom_domain: domain)
     return unless @portal

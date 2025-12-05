@@ -6,6 +6,59 @@
       "AGENTS": "You have exceeded the agent limit. Your plan only allows {allowedAgents} agents.",
       "NON_ADMIN": "Please contact your administrator to upgrade the plan and continue using all features."
     },
+    "BRANDING_SECTION": {
+      "TITLE": "Branding",
+      "NOTE": "Leave fields blank to use the installation defaults.",
+      "NAME": {
+        "LABEL": "Brand name",
+        "PLACEHOLDER": "Acme Support"
+      },
+      "INSTALLATION_NAME": {
+        "LABEL": "Installation name",
+        "PLACEHOLDER": "Acme Helpdesk"
+      },
+      "BRAND_URL": {
+        "LABEL": "Brand URL",
+        "PLACEHOLDER": "https://example.com"
+      },
+      "WIDGET_BRAND_URL": {
+        "LABEL": "Widget brand URL",
+        "PLACEHOLDER": "https://example.com/support"
+      },
+      "TERMS_URL": {
+        "LABEL": "Terms URL",
+        "PLACEHOLDER": "https://example.com/terms"
+      },
+      "PRIVACY_URL": {
+        "LABEL": "Privacy URL",
+        "PLACEHOLDER": "https://example.com/privacy"
+      },
+      "PRIMARY_COLOR": {
+        "LABEL": "Primary color",
+        "PLACEHOLDER": "#1F93FF",
+        "HELP_TEXT": "Optional hex color used in manifests and favicons."
+      },
+      "LOGO": {
+        "LABEL": "Logo",
+        "EMPTY": "No logo uploaded",
+        "REMOVE": "Remove custom logo"
+      },
+      "LOGO_DARK": {
+        "LABEL": "Logo (dark mode)",
+        "EMPTY": "No dark logo uploaded",
+        "REMOVE": "Remove custom dark logo"
+      },
+      "LOGO_THUMBNAIL": {
+        "LABEL": "Logo thumbnail",
+        "EMPTY": "No thumbnail uploaded",
+        "REMOVE": "Remove custom thumbnail"
+      },
+      "SUBMIT": "Save branding",
+      "UPDATE": {
+        "SUCCESS": "Branding updated",
+        "ERROR": "Could not update branding, try again"
+      }
+    },
     "TITLE": "Account settings",
     "SUBMIT": "Update settings",
     "BACK": "Back",
@@ -123,11 +176,11 @@
         "CUSTOM_EMAIL_DOMAIN_ENABLED": "You can receive emails in your custom domain now."
       }
     },
-    "UPDATE_CHATWOOT": "An update {latestChatwootVersion} for Chatwoot is available. Please update your instance.",
+    "UPDATE_CHATWOOT": "An update {latestChatwootVersion} for Nomad Insurance is available. Please update your instance.",
     "LEARN_MORE": "Learn more",
-    "PAYMENT_PENDING": "Your payment is pending. Please update your payment information to continue using Chatwoot",
-    "UPGRADE": "Upgrade to continue using Chatwoot",
-    "LIMITS_UPGRADE": "Your account has exceeded the usage limits, please upgrade your plan to continue using Chatwoot",
+    "PAYMENT_PENDING": "Your payment is pending. Please update your payment information to continue using Nomad Insurance",
+    "UPGRADE": "Upgrade to continue using Nomad Insurance",
+    "LIMITS_UPGRADE": "Your account has exceeded the usage limits, please upgrade your plan to continue using Nomad Insurance",
     "OPEN_BILLING": "Open billing"
   },
   "FORMS": {

@@ -1,8 +1,9 @@
 class ApplicationMailer < ActionMailer::Base
   include ActionView::Helpers::SanitizeHelper
 
-  default from: ENV.fetch('MAILER_SENDER_EMAIL', 'Chatwoot <accounts@chatwoot.com>')
+  default from: ENV.fetch('MAILER_SENDER_EMAIL', 'Nomad Insurance <support@nomadinsurance.com>')
   before_action { ensure_current_account(params.try(:[], :account)) }
+  before_action :warn_if_account_missing, if: -> { Rails.env.development? || Rails.env.test? }
   around_action :switch_locale
   layout 'mailer/base'
   # Fetch template from Database if available
@@ -10,11 +11,7 @@ class ApplicationMailer < ActionMailer::Base
   prepend_view_path ::EmailTemplate.resolver
   append_view_path Rails.root.join('app/views/mailers')
   helper :frontend_urls
-  helper do
-    def global_config
-      @global_config ||= GlobalConfig.get('BRAND_NAME', 'BRAND_URL')
-    end
-  end
+  helper_method :branding_config, :global_config
 
   rescue_from(*ExceptionList::SMTP_EXCEPTIONS, with: :handle_smtp_exceptions)
 
@@ -44,7 +41,7 @@ class ApplicationMailer < ActionMailer::Base
     # Merge additional objects into this in your mailer
     # liquid template handler converts these objects into drop objects
     {
-      account: Current.account,
+      account: @account || Current.account,
       user: @agent,
       conversation: @conversation,
       inbox: @conversation&.inbox
@@ -54,7 +51,7 @@ class ApplicationMailer < ActionMailer::Base
   def liquid_locals
     # expose variables you want to be exposed in liquid
     locals = {
-      global_config: GlobalConfig.get('BRAND_NAME', 'BRAND_URL'),
+      global_config: global_config,
       action_url: @action_url
     }
 
@@ -71,7 +68,8 @@ class ApplicationMailer < ActionMailer::Base
 
   def ensure_current_account(account)
     Current.reset
-    Current.account = account if account.present?
+    @account = account if account.present?
+    Current.account = @account if @account
   end
 
   def switch_locale(&)
@@ -80,5 +78,25 @@ class ApplicationMailer < ActionMailer::Base
     # ensure locale won't bleed into other requests
     # https://guides.rubyonrails.org/i18n.html#managing-the-locale-across-requests
     I18n.with_locale(locale, &)
+  end
+
+  def branding_config
+    @branding_config ||= BrandingConfig.new(account: @account || Current.account)
+  end
+
+  def global_config
+    @global_config ||= {
+      'BRAND_NAME' => branding_config.brand_name,
+      'BRAND_URL' => branding_config.brand_url
+    }
+  end
+
+  def warn_if_account_missing
+    return if @account || Current.account
+
+    Rails.logger.warn(
+      "[ApplicationMailer] account is not set for #{self.class.name}##{action_name} – " \
+      'branding and templates may fall back to installation defaults.'
+    )
   end
 end

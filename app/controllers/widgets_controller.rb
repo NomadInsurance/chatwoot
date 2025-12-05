@@ -2,8 +2,8 @@
 class WidgetsController < ActionController::Base
   include WidgetHelper
 
-  before_action :set_global_config
   before_action :set_web_widget
+  before_action :set_global_config
   before_action :ensure_account_is_active
   before_action :ensure_location_is_supported
   before_action :set_token
@@ -14,14 +14,12 @@ class WidgetsController < ActionController::Base
   private
 
   def set_global_config
-    @global_config = GlobalConfig.get(
-      'LOGO_THUMBNAIL',
-      'BRAND_NAME',
-      'WIDGET_BRAND_URL',
+    base_config = GlobalConfig.get(
       'DIRECT_UPLOADS_ENABLED',
-      'MAXIMUM_FILE_UPLOAD_SIZE',
-      'INSTALLATION_NAME'
+      'MAXIMUM_FILE_UPLOAD_SIZE'
     )
+    branding = BrandingConfig.new(account: @web_widget.inbox.account).to_global_config_hash
+    @global_config = base_config.merge(branding)
   end
 
   def set_web_widget

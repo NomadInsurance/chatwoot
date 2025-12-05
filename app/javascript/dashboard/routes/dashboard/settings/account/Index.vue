@@ -6,6 +6,7 @@ import { useAlert } from 'dashboard/composables';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import { useConfig } from 'dashboard/composables/useConfig';
 import { useAccount } from 'dashboard/composables/useAccount';
+import accountBrandingAPI from 'dashboard/api/accountBranding';
 import { FEATURE_FLAGS } from '../../../../featureFlags';
 import WithLabel from 'v3/components/Form/WithLabel.vue';
 import NextInput from 'next/input/Input.vue';
@@ -47,6 +48,24 @@ export default {
       domain: '',
       supportEmail: '',
       features: {},
+      brandingName: '',
+      brandingInstallationName: '',
+      brandingBrandUrl: '',
+      brandingWidgetBrandUrl: '',
+      brandingTermsUrl: '',
+      brandingPrivacyUrl: '',
+      brandingPrimaryColor: '',
+      logoUrl: '',
+      logoDarkUrl: '',
+      logoThumbnailUrl: '',
+      logoFile: null,
+      logoDarkFile: null,
+      logoThumbnailFile: null,
+      removeLogo: false,
+      removeLogoDark: false,
+      removeLogoThumbnail: false,
+      isBrandingLoading: false,
+      isBrandingUpdating: false,
     };
   },
   validations: {
@@ -118,8 +137,29 @@ export default {
         this.domain = domain;
         this.supportEmail = support_email;
         this.features = features;
+        await this.fetchBranding();
       } catch (error) {
         // Ignore error
+      }
+    },
+    async fetchBranding() {
+      this.isBrandingLoading = true;
+      try {
+        const { data } = await accountBrandingAPI.get(this.accountId);
+        this.brandingName = data.name || '';
+        this.brandingInstallationName = data.installation_name || '';
+        this.brandingBrandUrl = data.brand_url || '';
+        this.brandingWidgetBrandUrl = data.widget_brand_url || '';
+        this.brandingTermsUrl = data.terms_url || '';
+        this.brandingPrivacyUrl = data.privacy_url || '';
+        this.brandingPrimaryColor = data.primary_color || '';
+        this.logoUrl = data.logo_url || '';
+        this.logoDarkUrl = data.logo_dark_url || '';
+        this.logoThumbnailUrl = data.logo_thumbnail_url || '';
+      } catch (error) {
+        // Ignore error
+      } finally {
+        this.isBrandingLoading = false;
       }
     },
 
@@ -147,6 +187,102 @@ export default {
         useAlert(this.$t('GENERAL_SETTINGS.UPDATE.SUCCESS'));
       } catch (error) {
         useAlert(this.$t('GENERAL_SETTINGS.UPDATE.ERROR'));
+      }
+    },
+    async updateBranding() {
+      this.isBrandingUpdating = true;
+      const hasFilesOrRemovals =
+        this.logoFile ||
+        this.logoDarkFile ||
+        this.logoThumbnailFile ||
+        this.removeLogo ||
+        this.removeLogoDark ||
+        this.removeLogoThumbnail;
+
+      try {
+        let response;
+        if (hasFilesOrRemovals) {
+          const formData = new FormData();
+          formData.append('branding[name]', this.brandingName);
+          formData.append(
+            'branding[installation_name]',
+            this.brandingInstallationName
+          );
+          formData.append('branding[brand_url]', this.brandingBrandUrl);
+          formData.append(
+            'branding[widget_brand_url]',
+            this.brandingWidgetBrandUrl
+          );
+          formData.append('branding[terms_url]', this.brandingTermsUrl);
+          formData.append('branding[privacy_url]', this.brandingPrivacyUrl);
+          formData.append('branding[primary_color]', this.brandingPrimaryColor);
+          if (this.logoFile) {
+            formData.append('branding[logo]', this.logoFile);
+          }
+          if (this.logoDarkFile) {
+            formData.append('branding[logo_dark]', this.logoDarkFile);
+          }
+          if (this.logoThumbnailFile) {
+            formData.append('branding[logo_thumbnail]', this.logoThumbnailFile);
+          }
+          if (this.removeLogo) {
+            formData.append('branding[remove_logo]', true);
+          }
+          if (this.removeLogoDark) {
+            formData.append('branding[remove_logo_dark]', true);
+          }
+          if (this.removeLogoThumbnail) {
+            formData.append('branding[remove_logo_thumbnail]', true);
+          }
+          response = await accountBrandingAPI.update(
+            this.accountId,
+            formData,
+            true
+          );
+        } else {
+          response = await accountBrandingAPI.update(this.accountId, {
+            name: this.brandingName || null,
+            installation_name: this.brandingInstallationName || null,
+            brand_url: this.brandingBrandUrl || null,
+            widget_brand_url: this.brandingWidgetBrandUrl || null,
+            terms_url: this.brandingTermsUrl || null,
+            privacy_url: this.brandingPrivacyUrl || null,
+            primary_color: this.brandingPrimaryColor || null,
+          });
+        }
+
+        const data = response.data;
+        this.brandingName = data.name || '';
+        this.brandingInstallationName = data.installation_name || '';
+        this.brandingBrandUrl = data.brand_url || '';
+        this.brandingWidgetBrandUrl = data.widget_brand_url || '';
+        this.brandingTermsUrl = data.terms_url || '';
+        this.brandingPrivacyUrl = data.privacy_url || '';
+        this.brandingPrimaryColor = data.primary_color || '';
+        this.logoUrl = data.logo_url || '';
+        this.logoDarkUrl = data.logo_dark_url || '';
+        this.logoThumbnailUrl = data.logo_thumbnail_url || '';
+        this.logoFile = null;
+        this.logoDarkFile = null;
+        this.logoThumbnailFile = null;
+        this.removeLogo = false;
+        this.removeLogoDark = false;
+        this.removeLogoThumbnail = false;
+        useAlert(this.$t('GENERAL_SETTINGS.BRANDING_SECTION.UPDATE.SUCCESS'));
+      } catch (error) {
+        useAlert(this.$t('GENERAL_SETTINGS.BRANDING_SECTION.UPDATE.ERROR'));
+      } finally {
+        this.isBrandingUpdating = false;
+      }
+    },
+    handleFileChange(event, type) {
+      const file = event.target.files[0];
+      if (type === 'logo') {
+        this.logoFile = file;
+      } else if (type === 'logo_dark') {
+        this.logoDarkFile = file;
+      } else if (type === 'logo_thumbnail') {
+        this.logoThumbnailFile = file;
       }
     },
   },
@@ -235,6 +371,219 @@ export default {
             </NextButton>
           </div>
         </form>
+      </SectionLayout>
+
+      <SectionLayout
+        :title="$t('GENERAL_SETTINGS.BRANDING_SECTION.TITLE')"
+        :description="$t('GENERAL_SETTINGS.BRANDING_SECTION.NOTE')"
+        class="mt-6"
+      >
+        <form
+          v-if="!isBrandingLoading"
+          class="grid gap-4"
+          @submit.prevent="updateBranding"
+        >
+          <WithLabel
+            :label="$t('GENERAL_SETTINGS.BRANDING_SECTION.NAME.LABEL')"
+          >
+            <NextInput
+              v-model="brandingName"
+              type="text"
+              class="w-full"
+              :placeholder="
+                $t('GENERAL_SETTINGS.BRANDING_SECTION.NAME.PLACEHOLDER')
+              "
+            />
+          </WithLabel>
+          <WithLabel
+            :label="
+              $t('GENERAL_SETTINGS.BRANDING_SECTION.INSTALLATION_NAME.LABEL')
+            "
+          >
+            <NextInput
+              v-model="brandingInstallationName"
+              type="text"
+              class="w-full"
+              :placeholder="
+                $t(
+                  'GENERAL_SETTINGS.BRANDING_SECTION.INSTALLATION_NAME.PLACEHOLDER'
+                )
+              "
+            />
+          </WithLabel>
+          <WithLabel
+            :label="$t('GENERAL_SETTINGS.BRANDING_SECTION.BRAND_URL.LABEL')"
+          >
+            <NextInput
+              v-model="brandingBrandUrl"
+              type="text"
+              class="w-full"
+              :placeholder="
+                $t('GENERAL_SETTINGS.BRANDING_SECTION.BRAND_URL.PLACEHOLDER')
+              "
+            />
+          </WithLabel>
+          <WithLabel
+            :label="
+              $t('GENERAL_SETTINGS.BRANDING_SECTION.WIDGET_BRAND_URL.LABEL')
+            "
+          >
+            <NextInput
+              v-model="brandingWidgetBrandUrl"
+              type="text"
+              class="w-full"
+              :placeholder="
+                $t(
+                  'GENERAL_SETTINGS.BRANDING_SECTION.WIDGET_BRAND_URL.PLACEHOLDER'
+                )
+              "
+            />
+          </WithLabel>
+          <WithLabel
+            :label="$t('GENERAL_SETTINGS.BRANDING_SECTION.TERMS_URL.LABEL')"
+          >
+            <NextInput
+              v-model="brandingTermsUrl"
+              type="text"
+              class="w-full"
+              :placeholder="
+                $t('GENERAL_SETTINGS.BRANDING_SECTION.TERMS_URL.PLACEHOLDER')
+              "
+            />
+          </WithLabel>
+          <WithLabel
+            :label="$t('GENERAL_SETTINGS.BRANDING_SECTION.PRIVACY_URL.LABEL')"
+          >
+            <NextInput
+              v-model="brandingPrivacyUrl"
+              type="text"
+              class="w-full"
+              :placeholder="
+                $t('GENERAL_SETTINGS.BRANDING_SECTION.PRIVACY_URL.PLACEHOLDER')
+              "
+            />
+          </WithLabel>
+          <WithLabel
+            :label="$t('GENERAL_SETTINGS.BRANDING_SECTION.PRIMARY_COLOR.LABEL')"
+          >
+            <NextInput
+              v-model="brandingPrimaryColor"
+              type="text"
+              class="w-full"
+              :placeholder="
+                $t(
+                  'GENERAL_SETTINGS.BRANDING_SECTION.PRIMARY_COLOR.PLACEHOLDER'
+                )
+              "
+            />
+            <template #help>
+              {{
+                $t('GENERAL_SETTINGS.BRANDING_SECTION.PRIMARY_COLOR.HELP_TEXT')
+              }}
+            </template>
+          </WithLabel>
+
+          <div class="grid gap-6">
+            <div>
+              <p class="text-sm font-medium mb-2">
+                {{ $t('GENERAL_SETTINGS.BRANDING_SECTION.LOGO.LABEL') }}
+              </p>
+              <div class="flex items-center gap-4 mb-2">
+                <img
+                  v-if="logoUrl"
+                  :src="logoUrl"
+                  :alt="$t('GENERAL_SETTINGS.BRANDING_SECTION.LOGO.LABEL')"
+                  class="h-12"
+                />
+                <span v-else class="text-xs text-slate-500">
+                  {{ $t('GENERAL_SETTINGS.BRANDING_SECTION.LOGO.EMPTY') }}
+                </span>
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                @change="event => handleFileChange(event, 'logo')"
+              />
+              <label
+                class="flex items-center gap-2 mt-2 text-xs text-slate-600"
+              >
+                <input v-model="removeLogo" type="checkbox" />
+                {{ $t('GENERAL_SETTINGS.BRANDING_SECTION.LOGO.REMOVE') }}
+              </label>
+            </div>
+
+            <div>
+              <p class="text-sm font-medium mb-2">
+                {{ $t('GENERAL_SETTINGS.BRANDING_SECTION.LOGO_DARK.LABEL') }}
+              </p>
+              <div class="flex items-center gap-4 mb-2">
+                <img
+                  v-if="logoDarkUrl"
+                  :src="logoDarkUrl"
+                  :alt="$t('GENERAL_SETTINGS.BRANDING_SECTION.LOGO_DARK.LABEL')"
+                  class="h-12"
+                />
+                <span v-else class="text-xs text-slate-500">
+                  {{ $t('GENERAL_SETTINGS.BRANDING_SECTION.LOGO_DARK.EMPTY') }}
+                </span>
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                @change="event => handleFileChange(event, 'logo_dark')"
+              />
+              <label
+                class="flex items-center gap-2 mt-2 text-xs text-slate-600"
+              >
+                <input v-model="removeLogoDark" type="checkbox" />
+                {{ $t('GENERAL_SETTINGS.BRANDING_SECTION.LOGO_DARK.REMOVE') }}
+              </label>
+            </div>
+
+            <div>
+              <p class="text-sm font-medium mb-2">
+                {{
+                  $t('GENERAL_SETTINGS.BRANDING_SECTION.LOGO_THUMBNAIL.LABEL')
+                }}
+              </p>
+              <div class="flex items-center gap-4 mb-2">
+                <img
+                  v-if="logoThumbnailUrl"
+                  :src="logoThumbnailUrl"
+                  :alt="
+                    $t('GENERAL_SETTINGS.BRANDING_SECTION.LOGO_THUMBNAIL.LABEL')
+                  "
+                  class="h-12"
+                />
+                <span v-else class="text-xs text-slate-500">
+                  {{
+                    $t('GENERAL_SETTINGS.BRANDING_SECTION.LOGO_THUMBNAIL.EMPTY')
+                  }}
+                </span>
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                @change="event => handleFileChange(event, 'logo_thumbnail')"
+              />
+              <label
+                class="flex items-center gap-2 mt-2 text-xs text-slate-600"
+              >
+                <input v-model="removeLogoThumbnail" type="checkbox" />
+                {{
+                  $t('GENERAL_SETTINGS.BRANDING_SECTION.LOGO_THUMBNAIL.REMOVE')
+                }}
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <NextButton blue :is-loading="isBrandingUpdating" type="submit">
+              {{ $t('GENERAL_SETTINGS.BRANDING_SECTION.SUBMIT') }}
+            </NextButton>
+          </div>
+        </form>
+        <woot-loading-state v-else />
       </SectionLayout>
 
       <woot-loading-state v-if="uiFlags.isFetchingItem" />

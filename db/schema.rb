@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_11_14_173609) do
+ActiveRecord::Schema[7.1].define(version: 2025_12_02_140500) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -26,6 +26,15 @@ ActiveRecord::Schema[7.1].define(version: 2025_11_14_173609) do
     t.datetime "updated_at", null: false
     t.index ["owner_type", "owner_id"], name: "index_access_tokens_on_owner_type_and_owner_id"
     t.index ["token"], name: "index_access_tokens_on_token", unique: true
+  end
+
+  create_table "account_domains", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "host", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_account_domains_on_account_id"
+    t.index ["host"], name: "index_account_domains_on_host", unique: true
   end
 
   create_table "account_saml_settings", force: :cascade do |t|
@@ -73,6 +82,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_11_14_173609) do
     t.integer "status", default: 0
     t.jsonb "internal_attributes", default: {}, null: false
     t.jsonb "settings", default: {}
+    t.jsonb "branding", default: {}, null: false
     t.index ["status"], name: "index_accounts_on_status"
   end
 
@@ -1252,6 +1262,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_11_14_173609) do
     t.index ["inbox_id"], name: "index_working_hours_on_inbox_id"
   end
 
+  add_foreign_key "account_domains", "accounts"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "inboxes", "portals"

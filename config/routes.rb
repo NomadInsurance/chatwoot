@@ -32,6 +32,9 @@ Rails.application.routes.draw do
     resource :slack_uploads, only: [:show]
   end
 
+  get '/manifest.json', to: 'manifests#show'
+  get '/favicons/:size.png', to: 'favicons#show', constraints: { size: /\d+/ }
+
   get '/api', to: 'api#index'
   namespace :api, defaults: { format: 'json' } do
     namespace :v1 do
@@ -110,6 +113,7 @@ Rails.application.routes.draw do
           namespace :channels do
             resource :twilio_channel, only: [:create]
           end
+          resource :branding, controller: 'branding', only: [:show, :update]
           resources :conversations, only: [:index, :create, :show, :update, :destroy] do
             collection do
               get :meta
@@ -594,6 +598,7 @@ Rails.application.routes.draw do
         delete :avatar, on: :member, action: :destroy_avatar
       end
       resources :platform_apps, only: [:index, :new, :create, :show, :edit, :update, :destroy]
+      resources :account_domains
       resource :instance_status, only: [:show]
 
       resource :settings, only: [:show] do

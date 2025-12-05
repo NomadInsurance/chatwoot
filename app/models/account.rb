@@ -56,6 +56,15 @@ class Account < ApplicationRecord
   store_accessor :settings, :auto_resolve_after, :auto_resolve_message, :auto_resolve_ignore_waiting
   store_accessor :settings, :audio_transcriptions, :auto_resolve_label
 
+  store_accessor :branding,
+                 :branding_name,
+                 :branding_installation_name,
+                 :branding_brand_url,
+                 :branding_widget_brand_url,
+                 :branding_terms_url,
+                 :branding_privacy_url,
+                 :branding_primary_color
+
   has_many :account_users, dependent: :destroy_async
   has_many :agent_bot_inboxes, dependent: :destroy_async
   has_many :agent_bots, dependent: :destroy_async
@@ -97,8 +106,12 @@ class Account < ApplicationRecord
   has_many :webhooks, dependent: :destroy_async
   has_many :whatsapp_channels, dependent: :destroy_async, class_name: '::Channel::Whatsapp'
   has_many :working_hours, dependent: :destroy_async
+  has_many :account_domains, dependent: :destroy
 
   has_one_attached :contacts_export
+  has_one_attached :logo
+  has_one_attached :logo_dark
+  has_one_attached :logo_thumbnail
 
   enum :locale, LANGUAGES_CONFIG.map { |key, val| [val[:iso_639_1_code], key] }.to_h, prefix: true
   enum :status, { active: 0, suspended: 1 }

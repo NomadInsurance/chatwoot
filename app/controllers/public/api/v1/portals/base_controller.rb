@@ -58,6 +58,12 @@ class Public::Api::V1::Portals::BaseController < PublicController
   end
 
   def set_global_config
-    @global_config = GlobalConfig.get('LOGO_THUMBNAIL', 'BRAND_NAME', 'BRAND_URL', 'INSTALLATION_NAME')
+    branding = BrandingConfig.new(account: portal.account).to_global_config_hash
+    @global_config = branding.slice(
+      'LOGO_THUMBNAIL',
+      'BRAND_NAME',
+      'BRAND_URL',
+      'INSTALLATION_NAME'
+    )
   end
 end

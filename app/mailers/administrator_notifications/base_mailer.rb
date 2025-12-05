@@ -11,18 +11,22 @@ class AdministratorNotifications::BaseMailer < ApplicationMailer
 
   # Helper method to generate inbox URL
   def inbox_url(inbox)
-    "#{ENV.fetch('FRONTEND_URL', nil)}/app/accounts/#{Current.account.id}/settings/inboxes/#{inbox.id}"
+    "#{ENV.fetch('FRONTEND_URL', nil)}/app/accounts/#{branding_account.id}/settings/inboxes/#{inbox.id}"
   end
 
   # Helper method to generate settings URL
   def settings_url(section)
-    "#{ENV.fetch('FRONTEND_URL', nil)}/app/accounts/#{Current.account.id}/settings/#{section}"
+    "#{ENV.fetch('FRONTEND_URL', nil)}/app/accounts/#{branding_account.id}/settings/#{section}"
   end
 
   private
 
+  def branding_account
+    @account || Current.account
+  end
+
   def admin_emails
-    Current.account.administrators.pluck(:email)
+    branding_account.administrators.pluck(:email)
   end
 
   def liquid_locals
