@@ -12,7 +12,7 @@ class Api::V1::Accounts::OauthAuthorizationController < Api::V1::Accounts::BaseC
   end
 
   def base_url
-    ENV.fetch('FRONTEND_URL', 'http://localhost:3000')
+    request.base_url
   end
 
   private

@@ -9,7 +9,9 @@ export default {
       const baseUrl =
         'https://accounts.google.com/o/oauth2/auth/oauthchooseaccount';
       const clientId = window.chatwootConfig.googleOAuthClientId;
-      const redirectUri = window.chatwootConfig.googleOAuthCallbackUrl;
+      const redirectUri =
+        window.chatwootConfig.googleOAuthCallbackUrl ||
+        `${window.location.origin}/auth/google_oauth2/callback`;
       const responseType = 'code';
       const scope = 'email profile';
 
