@@ -3,8 +3,21 @@ class DeviseOverrides::OmniauthCallbacksController < DeviseTokenAuth::OmniauthCa
 
   def omniauth_success
     if auth_hash.blank?
-      error = request.env['omniauth.error'] || request.env['omniauth.error.type']
-      Rails.logger.error("OmniAuth failure for #{params[:provider]}: #{error.inspect}")
+      omniauth_error = request.env['omniauth.error']
+      error_type = request.env['omniauth.error.type']
+      error_strategy = request.env['omniauth.error.strategy']&.name
+      available_omniauth_keys = request.env.keys.grep(/\Aomniauth\./).sort
+
+      Rails.logger.error(
+        "OmniAuth failure for #{params[:provider]}: " \
+        "#{{
+          type: error_type,
+          error_class: omniauth_error&.class&.name,
+          error_message: omniauth_error&.message,
+          strategy: error_strategy,
+          env_keys: available_omniauth_keys
+        }.compact.to_json}"
+      )
       return redirect_to login_page_url(error: 'oauth-failed')
     end
 
