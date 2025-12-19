@@ -2,6 +2,12 @@ class DeviseOverrides::OmniauthCallbacksController < DeviseTokenAuth::OmniauthCa
   include EmailHelper
 
   def omniauth_success
+    if auth_hash.blank?
+      error = request.env['omniauth.error'] || request.env['omniauth.error.type']
+      Rails.logger.error("OmniAuth failure for #{params[:provider]}: #{error.inspect}")
+      return redirect_to login_page_url(error: 'oauth-failed')
+    end
+
     get_resource_from_auth_hash
 
     @resource.present? ? sign_in_user : sign_up_user
